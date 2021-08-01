@@ -29,7 +29,7 @@ var taxPercent int64 = 5
 
 // TODO 5%
 func main() {
-	taxLedger, _ = hex.DecodeString("")
+	taxLedger, _ = hex.DecodeString("04200cf458cefe3c008fa40b4d44a2afbde9a90e64ef4254fbfbe2acccf6cded18711072e54182e7744db421eeab3a34ff0f215beac22db313eb48550e709fbc23")
 
 	r := mux.NewRouter()
 	r.HandleFunc("/transfer", transfer)
@@ -48,6 +48,7 @@ func main() {
 func transfer(w http.ResponseWriter, r *http.Request) {
 	var err error
 	requestId := uuid.New().String()
+	fmt.Println("Start transfer:", requestId)
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	io.WriteString(w, "Request ID: "+requestId+"\n")
 	q := r.URL.Query()
@@ -165,6 +166,7 @@ func transfer(w http.ResponseWriter, r *http.Request) {
 	// Составляем ответ. Балансы до, балансы после, сумма перевода и комиссии, адрес кошелька трон и спида
 
 	w.WriteHeader(http.StatusOK)
+	fmt.Println("End transfer:", requestId)
 }
 
 func getInAppBalance(identity *config.Identity) (int64, error) {
@@ -236,15 +238,15 @@ func getKeys(importKey string, keyType string, seedPhrase string) (key *ecdsa.Pr
 	k, _, err := util.GenerateKey(importKey, keyType, seedPhrase)
 
 	ks, err := crypto.FromPrivateKey(k)
-	fmt.Println("Address", ks.Base58Address)
 	if err != nil {
 		return nil, nil, config.Identity{}, err
 	}
+
 	k64, err := crypto.Hex64ToBase64(ks.HexPrivateKey)
-	identity.PrivKey = k64
 	if err != nil {
 		return nil, nil, config.Identity{}, err
 	}
+	identity.PrivKey = k64
 
 	// get key
 	privKeyIC, err := identity.DecodePrivateKey("")
@@ -270,7 +272,6 @@ func getKeys(importKey string, keyType string, seedPhrase string) (key *ecdsa.Pr
 	}
 
 	ledgerAddress, err = ic.RawFull(privKeyIC.GetPublic())
-
 	if err != nil {
 		fmt.Println("get ledger address failed, ERR: \n", err)
 		return nil, nil, config.Identity{}, err
@@ -287,7 +288,22 @@ func info(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8") // normal header
 	w.WriteHeader(http.StatusOK)
 
-	io.WriteString(w, "\n")
-	io.WriteString(w, "This HTTP response has both headers before this text and trailers at the end.\n")
-	io.WriteString(w, "This HTTP response has both headers before this text and trailers at the end.\n")
+	io.WriteString(w, "Сервис переводов между IN APP балансами! Комиссия 5%\n\n")
+
+	io.WriteString(w, "Для перевода необходимо указать:\n")
+	io.WriteString(w, "Кошелёк списания, один из параметров:\n")
+	io.WriteString(w, "	fromKey - секретный ключ, пример: 7eb6948762712c08a1ff079dcdf8948e7e9fc9844ca9f619e770ed1fdd83ecf2\n")
+	io.WriteString(w, "	fromSeed - 12 слов, пример: muffin,elbow,monster,regular,burger,lady,thrive,virtual,curve,mammal,reflect,venue\n\n")
+
+	io.WriteString(w, "Кошелёк начисления, один из параметров:\n")
+	io.WriteString(w, "	toSpeed - адрес кошелька speed/btfs, пример: 04200cf458cefe3c008fa40b4d44a2afbde9a90e64ef4254fbfbe2acccf6cded18711072e54182e7744db421eeab3a34ff0f215beac22db313eb48550e709fbc23\n")
+	io.WriteString(w, "	toKey - секретный ключ, пример: 7eb6948762712c08a1ff079dcdf8948e7e9fc9844ca9f619e770ed1fdd83ecf2\n")
+	io.WriteString(w, "	toSeed - 12 слов, пример: muffin,elbow,monster,regular,burger,lady,thrive,virtual,curve,mammal,reflect,venue\n\n")
+
+	io.WriteString(w, "Сумма списания, если сумма не указана то спишет весь баланс:\n")
+	io.WriteString(w, "	amount - сумма перевода, минимальное знаение 2, 1 БТТ = 1000000\n\n")
+
+	io.WriteString(w, "В итоге у вас должна выйти примерно такая строка, в зависимости от выбора способа указания кошелька:\n")
+	io.WriteString(w, "http://127.0.0.1:30080/transfer?fromSeed=muffin,elbow,monster,regular,burger,lady,thrive,virtual,curve,mammal,reflect,venue&toKey=7eb6948762712c08a1ff079dcdf8948e7e9fc9844ca9f619e770ed1fdd83ecf2&amount=2\n")
+
 }
