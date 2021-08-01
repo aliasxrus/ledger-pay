@@ -29,7 +29,7 @@ var taxPercent int64 = 5
 
 // TODO 5%
 func main() {
-	taxLedger, _ = hex.DecodeString("04200cf458cefe3c008fa40b4d44a2afbde9a90e64ef4254fbfbe2acccf6cded18711072e54182e7744db421eeab3a34ff0f215beac22db313eb48550e709fbc23")
+	taxLedger, _ = hex.DecodeString("04f431a621b0e56d236fb55651c568724e32716afc9125824ebb3d98889e1364ab5bb9e2b00d916c09dfb873a76b9797fcaee0589256bb2418d8bd4b0d702b06e8")
 
 	r := mux.NewRouter()
 	r.HandleFunc("/transfer", transfer)
