@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"crypto/ecdsa"
+	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -30,7 +31,7 @@ var taxPercent int64 = 5
 
 // TODO 5%
 func main() {
-	taxLedger, _ = hex.DecodeString("047649de86edf486162563bcaf5c10c21a661a93078e0aeed5085944dab9d28df42b416e0c5dc3680788f1673d7c28648cbc856ed1fc6a375e2e3662570107deb5")
+	taxLedger, _ = base64.StdEncoding.DecodeString("BCKKQghIx/dH3WqaS8+v5ggHEheoaSPGnWre4fxN2jasEI/quxPdtnERBL+OITZD7BMbr0fi9B7j2JAJsNKFVzw=")
 
 	r := mux.NewRouter()
 	r.HandleFunc("/transfer", transfer)
@@ -123,7 +124,7 @@ func tm(w http.ResponseWriter, r *http.Request) {
 
 	if tmReq.ToType == "speed" {
 		var err error
-		recipientLedger, err = hex.DecodeString(tmReq.To)
+		recipientLedger, err = base64.StdEncoding.DecodeString(tmReq.To)
 		if err != nil {
 			w.WriteHeader(http.StatusTeapot)
 			return
@@ -178,6 +179,7 @@ func tm(w http.ResponseWriter, r *http.Request) {
 	tmRes.Tax = taxSum
 	tmRes.After = balanceAfterTax
 
+	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(tmRes)
 	return
 }
