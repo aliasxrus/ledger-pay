@@ -151,10 +151,9 @@ func tm(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	taxSum := int64(0)
-	paySum := payerBalanceBefore - taxSum
+	paySum := payerBalanceBefore
 
-	balanceAfterTransfer, err := tmPay(payerKey, payerLedger, recipientLedger, paySum)
+	_, err = tmPay(payerKey, payerLedger, recipientLedger, paySum)
 	if err != nil {
 		tmRes.After = payerBalanceBefore
 		w.WriteHeader(http.StatusInternalServerError)
@@ -163,17 +162,6 @@ func tm(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	tmRes.Transfer = paySum
-
-	balanceAfterTax, err := tmPay(payerKey, payerLedger, taxLedger, taxSum)
-	if err != nil {
-		tmRes.After = balanceAfterTransfer
-		w.WriteHeader(http.StatusInternalServerError)
-		tmRes.Error = err.Error()
-		json.NewEncoder(w).Encode(tmRes)
-		return
-	}
-	tmRes.Tax = taxSum
-	tmRes.After = balanceAfterTax
 
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(tmRes)
@@ -276,8 +264,7 @@ func transfer(w http.ResponseWriter, r *http.Request) {
 		payerBalanceBefore = amount
 	}
 
-	taxSum := int64(0)
-	paySum := payerBalanceBefore - taxSum
+	paySum := payerBalanceBefore
 	if paySum <= 0 {
 		io.WriteString(w, "Low amount, min: 2")
 		return
@@ -291,17 +278,7 @@ func transfer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	payInfo, err := pay(payerKey, payerLedger, taxLedger, taxSum)
-	if err != nil {
-		fmt.Println(requestId, "Error transfer:", err)
-		io.WriteString(w, "Error transfer: "+err.Error())
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-
 	io.WriteString(w, "Transfer sum: "+strconv.FormatInt(paySum, 10)+"\n")
-	io.WriteString(w, "Tax sum: "+strconv.FormatInt(taxSum, 10)+"\n")
-	io.WriteString(w, payInfo)
 
 	// Составляем ответ. Балансы до, балансы после, сумма перевода и комиссии, адрес кошелька трон и спида
 
