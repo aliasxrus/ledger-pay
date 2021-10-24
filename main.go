@@ -27,7 +27,7 @@ import (
 
 var escrowService = "https://escrow.btfs.io"
 var taxLedger []byte
-var taxPercent int64 = 5
+var taxPercent int64 = 0
 
 // TODO 5%
 func main() {
