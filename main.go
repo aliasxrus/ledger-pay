@@ -27,7 +27,6 @@ import (
 
 var escrowService = "https://escrow.btfs.io"
 var taxLedger []byte
-var taxPercent int64 = 0
 
 // TODO 5%
 func main() {
@@ -152,10 +151,7 @@ func tm(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	taxSum := payerBalanceBefore * taxPercent / 100
-	if taxSum == 0 {
-		taxSum += 1
-	}
+	taxSum := int64(0)
 	paySum := payerBalanceBefore - taxSum
 
 	balanceAfterTransfer, err := tmPay(payerKey, payerLedger, recipientLedger, paySum)
@@ -280,10 +276,7 @@ func transfer(w http.ResponseWriter, r *http.Request) {
 		payerBalanceBefore = amount
 	}
 
-	taxSum := payerBalanceBefore * taxPercent / 100
-	if taxSum == 0 {
-		taxSum += 1
-	}
+	taxSum := int64(0)
 	paySum := payerBalanceBefore - taxSum
 	if paySum <= 0 {
 		io.WriteString(w, "Low amount, min: 2")
